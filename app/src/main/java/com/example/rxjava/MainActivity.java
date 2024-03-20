@@ -1,6 +1,10 @@
 package com.example.rxjava;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.ViewModelProvider;
+import androidx.lifecycle.ViewModelProviders;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import android.os.Bundle;
 import android.text.Editable;
@@ -8,7 +12,10 @@ import android.text.TextWatcher;
 import android.util.Log;
 
 import com.example.rxjava.databinding.ActivityMainBinding;
+import com.example.rxjava.pojo.PostModel;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Observable;
@@ -25,11 +32,29 @@ import io.reactivex.subjects.ReplaySubject;
 
 public class MainActivity extends AppCompatActivity {
 
+    PostViewModel postViewModel;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        ActivityMainBinding binding =  ActivityMainBinding.inflate(getLayoutInflater());
+        setContentView(R.layout.activity_main);
+//        ActivityMainBinding binding =  ActivityMainBinding.inflate(getLayoutInflater());
 
+        postViewModel = ViewModelProviders.of(this).get(PostViewModel.class);
+        postViewModel.getPosts();
+
+        RecyclerView recyclerView = findViewById(R.id.recycler);
+        PostsAdapter adapter = new PostsAdapter();
+        if (recyclerView != null) {
+            recyclerView.setLayoutManager(new LinearLayoutManager(this));
+            recyclerView.setAdapter(adapter);
+        } else {
+            Log.e("MainActivity", "RecyclerView is null");
+        }
+
+        postViewModel.postsMutableLiveData.observe(this, postModels -> adapter.setMoviesList(postModels));
+
+    }
+    public void testObservable(){
         Observer observer = new Observer() {
             @Override
             public void onSubscribe(Disposable d) {
@@ -52,14 +77,13 @@ public class MainActivity extends AppCompatActivity {
             }
         };
         Observable.just("1","2","3")
-                .doOnNext(s-> Log.d("TAG10", "onCreate: s"))
                 .subscribeOn(Schedulers.io())
+                .doOnNext(s-> Log.d("TAG10", "onCreate: "+"Thread: "+Thread.currentThread().getName()))
+
                 .map((Function<Object, Object>) o -> (o.toString()+"Mapped"))
-                .filter(s->s.toString().equals("1"))
+//                .filter(s->s.toString().equals("1"))
                 .observeOn(Schedulers.computation())
-                .subscribe();
-
-
+                .subscribe(observer);
     }
     public void flatMapOperator(){
 //        Observable.create(new ObservableOnSubscribe<Object>() {
