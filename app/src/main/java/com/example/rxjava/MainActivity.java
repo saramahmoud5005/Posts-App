@@ -37,21 +37,25 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
 //        ActivityMainBinding binding =  ActivityMainBinding.inflate(getLayoutInflater());
 
         postViewModel = ViewModelProviders.of(this).get(PostViewModel.class);
         postViewModel.getPosts();
 
         RecyclerView recyclerView = findViewById(R.id.recycler);
-        PostsAdapter adapter = new PostsAdapter();
-        if (recyclerView != null) {
-            recyclerView.setLayoutManager(new LinearLayoutManager(this));
-            recyclerView.setAdapter(adapter);
-        } else {
-            Log.e("MainActivity", "RecyclerView is null");
-        }
+        PostsAdapter adapter = new PostsAdapter(this);
 
-        postViewModel.postsMutableLiveData.observe(this, postModels -> adapter.setMoviesList(postModels));
+        Log.d("rxjava2", "recycler: "+recyclerView);
+
+        postViewModel.postsMutableLiveData.observe(this, postModels -> {
+            Log.d("rxjava2", "onChanged: "+postModels.get(0).getBody());
+            adapter.setMoviesList(postModels);
+        });
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        recyclerView.setAdapter(adapter);
+
+
 
     }
     public void testObservable(){
